@@ -147,6 +147,14 @@
         window.location.href = "details.html";
       });
     });
+    // Auto-center seat map on mobile
+setTimeout(() => {
+  const container = document.querySelector(".seat-map");
+  if (container && window.innerWidth < 700) {
+    container.scrollLeft = (container.scrollWidth - container.clientWidth) / 2;
+  }
+}, 200);
+
   </script>
 </head>
 <body>
@@ -164,3 +172,4 @@
   <button id="continueBtn">Continue</button>
 </body>
 </html>
+
