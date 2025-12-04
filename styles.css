@@ -234,4 +234,18 @@ h2, .stage-banner, #continueBtn {
     font-size: 14px;
   }
 }
+/* Center seat map on mobile */
+@media (max-width: 600px) {
+  .seat-map {
+    display: flex;
+    justify-content: center;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .seat-layout {
+    margin: 0 auto;
+  }
+}
+
 
