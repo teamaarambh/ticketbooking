@@ -1,16 +1,205 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="utf-8" />
   <title>Select Seats – Aarambh</title>
-  <link rel="stylesheet" href="styles.css" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <meta name="theme-color" content="#2b6cb0" />
+  <style>
+    /* ---------- App-style mobile-first CSS ---------- */
+    :root{
+      --bg:#fbfbfb;
+      --card:#ffffff;
+      --accent:#2b6cb0;
+      --muted:#6b7280;
+      --seat-size-desktop:14px;  /* small on desktop */
+      --seat-size-mobile:28px;   /* comfortable on phones */
+      --seat-gap:6px;
+    }
+    html,body{height:100%;margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;background:var(--bg);-webkit-font-smoothing:antialiased;color:#111}
+    /* App shell */
+    .app {
+      min-height:100vh;
+      display:flex;
+      flex-direction:column;
+      overflow:hidden;
+    }
 
-  <!-- Firebase SDK -->
+    /* Top app bar */
+    .app-bar{
+      height:56px;
+      display:flex;
+      align-items:center;
+      gap:12px;
+      padding:0 14px;
+      background:linear-gradient(180deg, #ffffff 0%, #f7fbff 100%);
+      border-bottom:1px solid rgba(0,0,0,0.04);
+      box-shadow: 0 1px 0 rgba(0,0,0,0.02);
+      position:relative;
+      z-index:10;
+    }
+    .app-bar .logo{
+      width:36px;height:36px;border-radius:8px;background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:18px;
+    }
+    .app-bar .title{font-weight:700;font-size:16px;}
+
+    /* Content area */
+    .content{
+      flex:1 1 auto;
+      overflow:auto;
+      -webkit-overflow-scrolling:touch;
+      padding:12px;
+    }
+
+    /* Card style */
+    .card{
+      background:var(--card);
+      border-radius:12px;
+      padding:12px;
+      box-shadow:0 6px 18px rgba(16,24,40,0.04);
+      margin-bottom:12px;
+    }
+
+    h2{margin:0 0 8px 0;font-size:16px}
+    .infos{display:flex;gap:12px;flex-wrap:wrap;font-size:13px;color:var(--muted);margin-bottom:8px}
+
+    .stage-banner{
+      text-align:center;
+      padding:8px;
+      border-radius:8px;
+      background:#f3f4f6;
+      font-weight:600;
+      margin:8px 0 10px;
+    }
+
+    /* Seat map area */
+    .seat-map {
+      width:100%;
+      overflow:auto;             /* allow horizontal swipe if too wide */
+      -webkit-overflow-scrolling:touch;
+      padding-bottom: calc(var(--seat-size-mobile) * 0.5);
+    }
+
+    .seat-layout{
+      display:flex;
+      gap: calc(var(--seat-gap) * 1px);
+      align-items:flex-start;
+      justify-content:center;
+      padding:10px 6px;
+      box-sizing:border-box;
+    }
+
+    .division{ display:flex; flex-direction:column; gap:6px; }
+
+    .row{ display:flex; gap: calc(var(--seat-gap) * 1px); align-items:center; justify-content:center; }
+
+    /* Seat sizing adapt to device */
+    .seat {
+      width: var(--seat-size-mobile);
+      height: var(--seat-size-mobile);
+      min-width: var(--seat-size-mobile);
+      min-height: var(--seat-size-mobile);
+      border-radius:8px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-size:12px;
+      box-sizing:border-box;
+      cursor:pointer;
+      border:2px solid rgba(0,0,0,0.06);
+      user-select:none;
+      touch-action:manipulation;
+    }
+
+    /* small labels inside seat */
+    .seat .label{ font-weight:700; font-size:12px; color:#012; line-height:1; transform:translateY(-1px) }
+
+    .premium{ background:#ffd8a8; border-color:#d67d00 }
+    .economy{ background:#e6f2ff; border-color:#217dbb }
+    .booked{ background:#bfc5c7 !important; border-color:#8f9496 !important; cursor:not-allowed }
+    .selected{ background:#2ecc71 !important; border-color:#27ae60 !important; color:#fff }
+
+    /* legend */
+    .seat-legend{ display:flex; gap:12px; align-items:center; font-size:13px; color:var(--muted); margin-top:8px; flex-wrap:wrap }
+    .legend-item{ display:flex; gap:8px; align-items:center; }
+    .legend-dot{ width:14px;height:14px;border-radius:4px;border:1px solid rgba(0,0,0,0.06) }
+
+    /* Bottom fixed booking bar (app-like) */
+    .bottom-bar{
+      position:sticky;
+      bottom:0;
+      background:linear-gradient(180deg, rgba(255,255,255,0.6), rgba(255,255,255,0.9));
+      display:flex;
+      align-items:center;
+      gap:12px;
+      padding:10px;
+      border-top:1px solid rgba(0,0,0,0.05);
+      backdrop-filter: blur(6px);
+    }
+    .summary { font-weight:600; color:var(--muted); font-size:14px; }
+    .book-btn {
+      margin-left:auto;
+      background:var(--accent);
+      color:#fff;
+      border:0;
+      padding:10px 16px;
+      border-radius:10px;
+      font-weight:700;
+      font-size:15px;
+      box-shadow:0 6px 18px rgba(43,108,176,0.18);
+    }
+    .book-btn:disabled{ opacity:0.5; box-shadow:none; background:#9dbff0 }
+
+    /* Make sure large phones and desktop look OK */
+    @media (min-width:720px){
+      .content{ padding:18px 28px; }
+      .seat { width: var(--seat-size-desktop); height: var(--seat-size-desktop); min-width: var(--seat-size-desktop); min-height: var(--seat-size-desktop); border-radius:4px; font-size:10px }
+      .seat .label { font-size:10px }
+    }
+
+    /* If viewport is narrow but seat layout is very wide, allow horizontal scroll but center on load */
+    .seat-map::-webkit-scrollbar{ height:10px }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <div class="app-bar">
+      <div class="logo">A</div>
+      <div class="title">Aarambh — Select Seats</div>
+    </div>
+
+    <div class="content">
+      <div class="card">
+        <h2 style="margin:0 0 6px">Choose seats</h2>
+        <div class="infos">
+          <div id="selectedSeats">Selected Seats: None</div>
+          <div id="totalPrice">Total Price: ₹0</div>
+        </div>
+
+        <div class="stage-banner">🎭 STAGE</div>
+
+        <div class="seat-map" id="seatMap">Loading seats…</div>
+
+        <div class="seat-legend" aria-hidden="true">
+          <div class="legend-item"><div class="legend-dot" style="background:#ffd8a8"></div> Premium (₹500)</div>
+          <div class="legend-item"><div class="legend-dot" style="background:#e6f2ff"></div> Economy (₹300)</div>
+          <div class="legend-item"><div class="legend-dot" style="background:#bfc5c7"></div> Booked</div>
+          <div class="legend-item"><div class="legend-dot" style="background:#2ecc71"></div> Selected</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="bottom-bar" aria-hidden="false">
+      <div class="summary" id="summaryCompact">Selected: 0</div>
+      <button id="continueBtn" class="book-btn" disabled>Continue →</button>
+    </div>
+  </div>
+
+  <!-- Firebase + seat map script (keeps your logic, minimal changes only) -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
     import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-    // Firebase Config (Your details)
     const firebaseConfig = {
       apiKey: "AIzaSyCz5-f1FZMxcfs2yc29hXNLz9636Q2jjKg",
       authDomain: "aarambh-ticket-bookings.firebaseapp.com",
@@ -21,11 +210,10 @@
       appId: "1:269445606104:web:4ee4beecee2d77cd5f45ad"
     };
 
-    // Initialize Firebase
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
-    // Global vars (single copy)
+    // Globals (unchanged logic)
     let bookedSeats = new Set();
     let selectedSeats = [];
     let totalPrice = 0;
@@ -33,20 +221,21 @@
     const middleRows = [...Array(18)].map((_, i) => String.fromCharCode(65 + i)); // A-R
     const middleCols = Array.from({ length: 15 }, (_, i) => i + 1);
 
-    // Fetch booked seats from Firestore
     async function fetchBookedSeats() {
-      const querySnapshot = await getDocs(collection(db, "bookings"));
-      const allSeats = [];
-      querySnapshot.forEach(doc => {
-        const seats = doc.data().seats || "";
-        if (seats) {
-          seats.split(",").forEach(s => allSeats.push(s.trim()));
-        }
-      });
-      bookedSeats = new Set(allSeats);
+      try {
+        const querySnapshot = await getDocs(collection(db, "bookings"));
+        const allSeats = [];
+        querySnapshot.forEach(doc => {
+          const seats = doc.data().seats || "";
+          if (seats) seats.split(",").forEach(s => allSeats.push(s.trim()));
+        });
+        bookedSeats = new Set(allSeats);
+      } catch (e) {
+        console.warn('Fetch failed', e);
+        bookedSeats = new Set();
+      }
     }
 
-    // Create seat element
     function createSeat(section, rowLabel, seatNum) {
       const seatId = `${section}${rowLabel}${seatNum}`;
       const isPremium = section === "M" && rowLabel >= "A" && rowLabel <= "H";
@@ -57,22 +246,26 @@
       seat.dataset.seatId = seatId;
       seat.dataset.price = price;
 
+      const label = document.createElement('div');
+      label.className = 'label';
+      label.textContent = `${rowLabel}${seatNum}`;
+      seat.appendChild(label);
+
       if (bookedSeats.has(seatId)) {
         seat.classList.add("booked");
         return seat;
       }
 
-      seat.addEventListener("click", () => {
-        // toggle selection
+      seat.addEventListener('click', () => {
         const idx = selectedSeats.indexOf(seatId);
         if (idx > -1) {
           selectedSeats.splice(idx, 1);
           totalPrice -= price;
-          seat.classList.remove("selected");
+          seat.classList.remove('selected');
         } else {
           selectedSeats.push(seatId);
           totalPrice += price;
-          seat.classList.add("selected");
+          seat.classList.add('selected');
         }
         updateInfo();
       });
@@ -85,53 +278,52 @@
         "Selected Seats: " + (selectedSeats.length ? selectedSeats.join(", ") : "None");
       document.getElementById("totalPrice").textContent =
         "Total Price: ₹" + totalPrice;
+      document.getElementById('summaryCompact').textContent = `Selected: ${selectedSeats.length}`;
+      document.getElementById('continueBtn').disabled = selectedSeats.length === 0;
     }
 
     async function renderSeats() {
       await fetchBookedSeats();
 
       const seatMap = document.getElementById("seatMap");
-      seatMap.textContent = "";
+      seatMap.innerHTML = '';
 
       const layoutWrapper = document.createElement("div");
       layoutWrapper.classList.add("seat-layout");
 
-      const leftDiv = document.createElement("div");
-      leftDiv.classList.add("division", "left");
-
-      const middleDiv = document.createElement("div");
-      middleDiv.classList.add("division", "middle");
-
-      const rightDiv = document.createElement("div");
-      rightDiv.classList.add("division", "right");
+      const leftDiv = document.createElement("div"); leftDiv.classList.add("division", "left");
+      const middleDiv = document.createElement("div"); middleDiv.classList.add("division", "middle");
+      const rightDiv = document.createElement("div"); rightDiv.classList.add("division", "right");
 
       middleRows.forEach((rowLabel, rowIndex) => {
         const sideSeats = Math.min(2 + rowIndex, 9);
 
-        const leftRow = document.createElement("div");
-        leftRow.classList.add("row");
-        for (let i = 1; i <= sideSeats; i++) {
-          leftRow.appendChild(createSeat("L", rowLabel, i));
-        }
+        const leftRow = document.createElement("div"); leftRow.classList.add("row");
+        for (let i = 1; i <= sideSeats; i++) leftRow.appendChild(createSeat("L", rowLabel, i));
         leftDiv.appendChild(leftRow);
 
-        const middleRow = document.createElement("div");
-        middleRow.classList.add("row");
-        middleCols.forEach(col => {
-          middleRow.appendChild(createSeat("M", rowLabel, col));
-        });
+        const middleRow = document.createElement("div"); middleRow.classList.add("row");
+        middleCols.forEach(col => middleRow.appendChild(createSeat("M", rowLabel, col)));
         middleDiv.appendChild(middleRow);
 
-        const rightRow = document.createElement("div");
-        rightRow.classList.add("row");
-        for (let i = 1; i <= sideSeats; i++) {
-          rightRow.appendChild(createSeat("R", rowLabel, i));
-        }
+        const rightRow = document.createElement("div"); rightRow.classList.add("row");
+        for (let i = 1; i <= sideSeats; i++) rightRow.appendChild(createSeat("R", rowLabel, i));
         rightDiv.appendChild(rightRow);
       });
 
       layoutWrapper.append(leftDiv, middleDiv, rightDiv);
       seatMap.appendChild(layoutWrapper);
+
+      // center horizontally on load (nice UX)
+      requestAnimationFrame(()=> {
+        // small delay then scroll center for wide maps
+        setTimeout(()=> {
+          const el = document.querySelector('.seat-map');
+          if (el) {
+            el.scrollLeft = (el.scrollWidth - el.clientWidth) / 2;
+          }
+        }, 120);
+      });
     }
 
     window.addEventListener("DOMContentLoaded", () => {
@@ -147,20 +339,9 @@
         window.location.href = "details.html";
       });
     });
+
+    // Re-render/adjust on orientation change to keep nicer layout
+    window.addEventListener('orientationchange', ()=> setTimeout(()=> { renderSeats(); }, 300));
   </script>
-</head>
-<body>
-  <h2>Select Your Seats</h2>
-  <div class="info" id="selectedSeats">Selected Seats: None</div>
-  <div class="info" id="totalPrice">Total Price: ₹0</div>
-  <div class="stage-banner">🎭 STAGE</div>
-  <div class="seat-map" id="seatMap">Loading seat map…</div>
-  <div class="seat-legend">
-    <div class="legend-item"><div class="seat-icon premium"></div> Premium (₹500)</div>
-    <div class="legend-item"><div class="seat-icon economy"></div> Economy (₹300)</div>
-    <div class="legend-item"><div class="seat-icon booked"></div> Booked</div>
-    <div class="legend-item"><div class="seat-icon selected"></div> Selected</div>
-  </div>
-  <button id="continueBtn">Continue</button>
 </body>
 </html>
