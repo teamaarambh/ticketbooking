@@ -196,3 +196,42 @@ h2, .stage-banner, #continueBtn {
     justify-content: center;
   }
 }
+/* Safe mobile-only improvement */
+@media (max-width: 600px) {
+
+  /* Increase tappable area without changing visual seat size */
+  .seat {
+    padding: 4px;
+    box-shadow: 0 1px 1px rgba(0,0,0,0.15);
+    touch-action: manipulation;
+  }
+
+  /* Slightly improve spacing for thumbs */
+  .row {
+    gap: 6px;
+  }
+
+  .division.left,
+  .division.middle,
+  .division.right {
+    gap: 6px;
+  }
+
+  /* Make legend easier to read on mobile */
+  .seat-legend {
+    font-size: 12px;
+    gap: 12px;
+  }
+
+  .legend-item .seat-icon {
+    width: 16px;
+    height: 16px;
+  }
+
+  /* Keep text readable */
+  #selectedSeats,
+  #totalPrice {
+    font-size: 14px;
+  }
+}
+
