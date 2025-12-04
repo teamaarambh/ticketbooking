@@ -1,175 +1,135 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>Select Seats – Aarambh</title>
-  <link rel="stylesheet" href="styles.css" />
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Aarambh — Where every story begins</title>
 
-  <!-- Firebase SDK -->
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+  <!-- PWA hint -->
+  <link rel="manifest" href="/manifest.json">
 
-    // Firebase Config (Your details)
-    const firebaseConfig = {
-      apiKey: "AIzaSyCz5-f1FZMxcfs2yc29hXNLz9636Q2jjKg",
-      authDomain: "aarambh-ticket-bookings.firebaseapp.com",
-      databaseURL: "https://aarambh-ticket-bookings-default-rtdb.firebaseio.com",
-      projectId: "aarambh-ticket-bookings",
-      storageBucket: "aarambh-ticket-bookings.firebasestorage.app",
-      messagingSenderId: "269445606104",
-      appId: "1:269445606104:web:4ee4beecee2d77cd5f45ad"
-    };
+  <!-- Basic SEO -->
+  <meta name="description" content="Aarambh — drama group. Upcoming shows, workshops and ticket bookings." />
 
-    // Initialize Firebase
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
+  <!-- Bootstrap (optional) -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
 
-    // Global vars (single copy)
-    let bookedSeats = new Set();
-    let selectedSeats = [];
-    let totalPrice = 0;
+  <!-- Your styles -->
+  <link rel="stylesheet" href="assets/css/styles.css" />
 
-    const middleRows = [...Array(18)].map((_, i) => String.fromCharCode(65 + i)); // A-R
-    const middleCols = Array.from({ length: 15 }, (_, i) => i + 1);
-
-    // Fetch booked seats from Firestore
-    async function fetchBookedSeats() {
-      const querySnapshot = await getDocs(collection(db, "bookings"));
-      const allSeats = [];
-      querySnapshot.forEach(doc => {
-        const seats = doc.data().seats || "";
-        if (seats) {
-          seats.split(",").forEach(s => allSeats.push(s.trim()));
-        }
-      });
-      bookedSeats = new Set(allSeats);
-    }
-
-    // Create seat element
-    function createSeat(section, rowLabel, seatNum) {
-      const seatId = `${section}${rowLabel}${seatNum}`;
-      const isPremium = section === "M" && rowLabel >= "A" && rowLabel <= "H";
-      const price = isPremium ? 500 : 300;
-
-      const seat = document.createElement("div");
-      seat.classList.add("seat", isPremium ? "premium" : "economy");
-      seat.dataset.seatId = seatId;
-      seat.dataset.price = price;
-
-      if (bookedSeats.has(seatId)) {
-        seat.classList.add("booked");
-        return seat;
-      }
-
-      seat.addEventListener("click", () => {
-        // toggle selection
-        const idx = selectedSeats.indexOf(seatId);
-        if (idx > -1) {
-          selectedSeats.splice(idx, 1);
-          totalPrice -= price;
-          seat.classList.remove("selected");
-        } else {
-          selectedSeats.push(seatId);
-          totalPrice += price;
-          seat.classList.add("selected");
-        }
-        updateInfo();
-      });
-
-      return seat;
-    }
-
-    function updateInfo() {
-      document.getElementById("selectedSeats").textContent =
-        "Selected Seats: " + (selectedSeats.length ? selectedSeats.join(", ") : "None");
-      document.getElementById("totalPrice").textContent =
-        "Total Price: ₹" + totalPrice;
-    }
-
-    async function renderSeats() {
-      await fetchBookedSeats();
-
-      const seatMap = document.getElementById("seatMap");
-      seatMap.textContent = "";
-
-      const layoutWrapper = document.createElement("div");
-      layoutWrapper.classList.add("seat-layout");
-
-      const leftDiv = document.createElement("div");
-      leftDiv.classList.add("division", "left");
-
-      const middleDiv = document.createElement("div");
-      middleDiv.classList.add("division", "middle");
-
-      const rightDiv = document.createElement("div");
-      rightDiv.classList.add("division", "right");
-
-      middleRows.forEach((rowLabel, rowIndex) => {
-        const sideSeats = Math.min(2 + rowIndex, 9);
-
-        const leftRow = document.createElement("div");
-        leftRow.classList.add("row");
-        for (let i = 1; i <= sideSeats; i++) {
-          leftRow.appendChild(createSeat("L", rowLabel, i));
-        }
-        leftDiv.appendChild(leftRow);
-
-        const middleRow = document.createElement("div");
-        middleRow.classList.add("row");
-        middleCols.forEach(col => {
-          middleRow.appendChild(createSeat("M", rowLabel, col));
-        });
-        middleDiv.appendChild(middleRow);
-
-        const rightRow = document.createElement("div");
-        rightRow.classList.add("row");
-        for (let i = 1; i <= sideSeats; i++) {
-          rightRow.appendChild(createSeat("R", rowLabel, i));
-        }
-        rightDiv.appendChild(rightRow);
-      });
-
-      layoutWrapper.append(leftDiv, middleDiv, rightDiv);
-      seatMap.appendChild(layoutWrapper);
-    }
-
-    window.addEventListener("DOMContentLoaded", () => {
-      renderSeats();
-
-      document.getElementById("continueBtn").addEventListener("click", () => {
-        if (selectedSeats.length === 0) {
-          alert("Please select at least one seat to continue.");
-          return;
-        }
-        sessionStorage.setItem("selectedSeats", JSON.stringify(selectedSeats));
-        sessionStorage.setItem("totalPrice", totalPrice);
-        window.location.href = "details.html";
-      });
-    });
-    // Auto-center seat map on mobile
-setTimeout(() => {
-  const container = document.querySelector(".seat-map");
-  if (container && window.innerWidth < 700) {
-    container.scrollLeft = (container.scrollWidth - container.clientWidth) / 2;
-  }
-}, 200);
-
-  </script>
+  <link rel="icon" href="assets/icons/icon-72.png" />
 </head>
 <body>
-  <h2>Select Your Seats</h2>
-  <div class="info" id="selectedSeats">Selected Seats: None</div>
-  <div class="info" id="totalPrice">Total Price: ₹0</div>
-  <div class="stage-banner">🎭 STAGE</div>
-  <div class="seat-map" id="seatMap">Loading seat map…</div>
-  <div class="seat-legend">
-    <div class="legend-item"><div class="seat-icon premium"></div> Premium (₹500)</div>
-    <div class="legend-item"><div class="seat-icon economy"></div> Economy (₹300)</div>
-    <div class="legend-item"><div class="seat-icon booked"></div> Booked</div>
-    <div class="legend-item"><div class="seat-icon selected"></div> Selected</div>
-  </div>
-  <button id="continueBtn">Continue</button>
+  <!-- Top navigation -->
+  <header class="site-header">
+    <div class="container header-inner">
+      <a class="brand" href="index.html">
+        <img src="assets/icons/icon-128.png" alt="Aarambh logo" class="brand-logo" />
+        <div class="brand-text">
+          <div class="brand-name">AARAMBH</div>
+          <div class="brand-tag">Where every story begins</div>
+        </div>
+      </a>
+
+      <button class="menu-toggle" id="menuToggle" aria-label="Open menu">
+        ☰
+      </button>
+
+      <nav class="nav" id="mainNav">
+        <a href="index.html">Home</a>
+        <a href="events.html">Events</a>
+        <a href="tickets.html">Tickets</a>
+        <a href="team.html">Team</a>
+        <a href="contact.html">Contact</a>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Hero -->
+  <section class="hero">
+    <div class="container hero-inner">
+      <div class="hero-left">
+        <h1>Welcome to Aarambh</h1>
+        <p class="lead">Aarambh is a community theatre group — performances, workshops and storytelling events. Join us for the next curtain rise.</p>
+
+        <div class="hero-ctas">
+          <a class="btn primary" href="events.html">See Events</a>
+          <a class="btn outline" href="tickets.html">Book Tickets</a>
+        </div>
+      </div>
+
+      <div class="hero-right">
+        <!-- example hero image: replace with event poster or hero JPG -->
+        <img src="assets/images/hero-poster.jpg" alt="Aarambh Hero" class="hero-image" />
+      </div>
+    </div>
+  </section>
+
+  <!-- Upcoming events snapshot -->
+  <section class="section events-preview">
+    <div class="container">
+      <div class="section-head">
+        <h2>Upcoming</h2>
+        <a class="view-all" href="events.html">View all</a>
+      </div>
+
+      <div class="cards">
+        <article class="card">
+          <img src="assets/images/event1.jpg" alt="Open Stage Night" />
+          <div class="card-body">
+            <h3>Open Stage Night</h3>
+            <p class="meta">15 Dec 2025 · Community Hall</p>
+            <p class="card-cta"><a href="tickets.html" class="btn small">Book Now</a></p>
+          </div>
+        </article>
+
+        <article class="card">
+          <img src="assets/images/event2.jpg" alt="Acting Workshop" />
+          <div class="card-body">
+            <h3>Acting Basics Workshop</h3>
+            <p class="meta">22 Dec 2025 · Studio</p>
+            <p class="card-cta"><a href="tickets.html" class="btn small">Book Now</a></p>
+          </div>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- About -->
+  <section class="section about">
+    <div class="container narrow">
+      <h2>About Us</h2>
+      <p>Aarambh brings together performers, writers and stage enthusiasts. We create community shows, workshops and open mics to nurture storytelling and live performance.</p>
+      <p><a href="team.html" class="link">Meet the team →</a></p>
+    </div>
+  </section>
+
+  <!-- Contact / small footer CTA -->
+  <section class="section contact-cta">
+    <div class="container narrow">
+      <div class="contact-grid">
+        <div>
+          <h3>Get in touch</h3>
+          <p>Email: <a href="mailto:info@teamaarambh.in">info@teamaarambh.in</a></p>
+          <p>Phone: +91-XXXXXXXXXX</p>
+        </div>
+        <div class="social">
+          <h3>Follow us</h3>
+          <p><a href="#">Instagram</a> · <a href="#">Facebook</a></p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Floating Book CTA (thumb-reachable on mobile) -->
+  <a class="float-cta" href="tickets.html" aria-label="Book Tickets">Book Tickets</a>
+
+  <footer class="site-footer">
+    <div class="container">
+      <small>&copy; <span id="year"></span> Aarambh. <a href="privacy.html">Privacy Policy</a></small>
+    </div>
+  </footer>
+
+  <script src="assets/js/main.js"></script>
 </body>
 </html>
-
